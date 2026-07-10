@@ -122,7 +122,7 @@
     display:flex; align-items:center; justify-content:center; border-radius:var(--radius);
     aspect-ratio:4/3; max-width:640px; margin:0 auto; overflow:auto;
   }
-  .map-frame img{max-width:100%; max-height:100%; object-fit:contain; display:block; transition:transform .15s ease;}
+ .map-frame img{display:block; transition:width .15s ease, height .15s ease;}
   @media (max-width: 640px){
     .map-frame{
       aspect-ratio:auto; max-width:none;
@@ -356,7 +356,7 @@ function renderFull(){
             <button class="zoom-btn" id="zoomReset" title="重設">⟲</button>
           </div>
         </div>
-        <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="transform:scale(${state.zoom});">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
+        <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="${zoomImgStyle(state.zoom)}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
         ${current && current.label ? `<div class="map-caption">${current.label}</div>` : ""}
       </div>
     ` : `<div class="empty">這個局部地圖目前沒有對應的完整地圖，請至 FullMaps 分頁新增（door_id 欄位需對應 "${state.buildingId}"）。</div>`}
@@ -372,17 +372,24 @@ function renderFull(){
   const zoomOut = document.getElementById("zoomOut");
   const zoomReset = document.getElementById("zoomReset");
   if(zoomIn) zoomIn.addEventListener("click", ()=>{
-    state.zoom = Math.min(3, +(state.zoom + 0.2).toFixed(2));
+    state.zoom = Math.min(3, +(state.zoom + 0.5).toFixed(2));
     renderFull();
   });
   if(zoomOut) zoomOut.addEventListener("click", ()=>{
-    state.zoom = Math.max(0.4, +(state.zoom - 0.2).toFixed(2));
+    state.zoom = Math.max(0.5, +(state.zoom - 0.5).toFixed(2));
     renderFull();
   });
   if(zoomReset) zoomReset.addEventListener("click", ()=>{
     state.zoom = 1;
     renderFull();
   });
+}
+
+function zoomImgStyle(zoom){
+  if(zoom <= 1){
+    return "max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;";
+  }
+  return `width:${zoom*100}%; height:${zoom*100}%; max-width:none; max-height:none; object-fit:contain; flex-shrink:0;`;
 }
 (async function init(){
   try{
