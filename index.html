@@ -371,14 +371,8 @@ function renderFull(){
   const zoomIn = document.getElementById("zoomIn");
   const zoomOut = document.getElementById("zoomOut");
   const zoomReset = document.getElementById("zoomReset");
-  if(zoomIn) zoomIn.addEventListener("click", ()=>{
-    state.zoom = Math.min(3, +(state.zoom + 0.5).toFixed(2));
-    renderFull();
-  });
-  if(zoomOut) zoomOut.addEventListener("click", ()=>{
-    state.zoom = Math.max(0.5, +(state.zoom - 0.5).toFixed(2));
-    renderFull();
-  });
+  if(zoomIn) zoomIn.addEventListener("click", ()=> adjustZoom(0.5));
+  if(zoomOut) zoomOut.addEventListener("click", ()=> adjustZoom(-0.5));
   if(zoomReset) zoomReset.addEventListener("click", ()=>{
     state.zoom = 1;
     renderFull();
@@ -390,6 +384,24 @@ function zoomImgStyle(zoom){
     return "max-width:100%; max-height:100%; width:auto; height:auto; object-fit:contain;";
   }
   return `width:${zoom*100}%; height:${zoom*100}%; max-width:none; max-height:none; object-fit:contain; flex-shrink:0;`;
+}
+
+function adjustZoom(delta){
+  const frame = document.querySelector(".map-frame");
+  const img = frame ? frame.querySelector("img") : null;
+  let fracX = 0.5, fracY = 0.5;
+  if(frame && img && img.offsetWidth && img.offsetHeight){
+    fracX = (frame.scrollLeft + frame.clientWidth/2) / img.offsetWidth;
+    fracY = (frame.scrollTop + frame.clientHeight/2) / img.offsetHeight;
+  }
+  state.zoom = Math.min(3, Math.max(0.5, +(state.zoom + delta).toFixed(2)));
+  renderFull();
+  const newFrame = document.querySelector(".map-frame");
+  const newImg = newFrame ? newFrame.querySelector("img") : null;
+  if(newFrame && newImg){
+    newFrame.scrollLeft = Math.max(0, fracX * newImg.offsetWidth - newFrame.clientWidth/2);
+    newFrame.scrollTop = Math.max(0, fracY * newImg.offsetHeight - newFrame.clientHeight/2);
+  }
 }
 (async function init(){
   try{
