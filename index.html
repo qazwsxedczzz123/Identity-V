@@ -122,7 +122,7 @@
     display:flex; border-radius:var(--radius);
     aspect-ratio:4/3; max-width:640px; margin:0 auto; overflow:auto;
   }
-  .map-frame img{display:block; margin:auto; transition:width .15s ease, height .15s ease;}
+  .map-frame img{display:block; margin:auto; transition:width .15s ease, height .15s ease; user-select:none; -webkit-user-drag:none; pointer-events:none;}
   @media (max-width: 640px){
     .map-frame{
       aspect-ratio:auto; max-width:none;
@@ -377,6 +377,7 @@ function renderFull(){
     state.zoom = 1;
     renderFull();
   });
+  enableMapDrag();
 }
 
 function zoomImgStyle(zoom){
@@ -402,6 +403,32 @@ function adjustZoom(delta){
     newFrame.scrollLeft = Math.max(0, fracX * newImg.offsetWidth - newFrame.clientWidth/2);
     newFrame.scrollTop = Math.max(0, fracY * newImg.offsetHeight - newFrame.clientHeight/2);
   }
+}
+function enableMapDrag(){
+  const frame = document.querySelector(".map-frame");
+  if(!frame) return;
+  let isDown = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+
+  frame.style.cursor = "grab";
+
+  frame.addEventListener("mousedown", (e)=>{
+    isDown = true;
+    frame.style.cursor = "grabbing";
+    startX = e.pageX;
+    startY = e.pageY;
+    startLeft = frame.scrollLeft;
+    startTop = frame.scrollTop;
+    e.preventDefault();
+  });
+  window.addEventListener("mouseup", ()=>{
+    isDown = false;
+    frame.style.cursor = "grab";
+  });
+  window.addEventListener("mousemove", (e)=>{
+    if(!isDown) return;
+    frame.scrollLeft = startLeft - (e.pageX - startX);
+    frame.scrollTop = startTop - (e.pageY - startY);
+  });
 }
 (async function init(){
   try{
