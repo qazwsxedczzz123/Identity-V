@@ -117,10 +117,14 @@
   }
   .floor-tab.active{background:var(--accent); color:#1B2838; font-weight:600;}
   .floor-tab:hover:not(.active){background:#DDD4BC;}
-  .map-frame{
+.map-frame{
     border:1px solid var(--paper-2); background:repeating-linear-gradient(45deg, #000 0 10px, #0A0A0A 10px 20px);
     display:flex; border-radius:var(--radius);
     aspect-ratio:4/3; max-width:640px; margin:0 auto; overflow:auto;
+    scrollbar-width:none;
+  }
+  .map-frame::-webkit-scrollbar{
+    display:none;
   }
   .map-frame img{display:block; margin:auto; transition:width .15s ease, height .15s ease; user-select:none; -webkit-user-drag:none; pointer-events:none;}
   @media (max-width: 640px){
