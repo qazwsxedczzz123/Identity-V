@@ -205,7 +205,7 @@ function svgMap(text, bg){
 
 // ---- app state ----
 let DOORS = [], PARTIALS = [], FULLS = [];
-let state = { screen:"doors", doorId:null, floor:null };
+let state = { screen:"doors", doorId:null, floor:null, buildingId:null, buildingName:null };
 
 const viewEl = document.getElementById("view");
 const crumbsEl = document.getElementById("crumbs");
@@ -259,7 +259,7 @@ function renderCrumbs(){
   crumbsEl.querySelectorAll(".step.done").forEach(el=>{
     el.addEventListener("click", ()=>{
       const step = el.dataset.step;
-      if(step==="doors"){ state.screen="doors"; state.doorId=null; state.floor=null; render(); }
+      if(step==="doors"){ state.screen="doors"; state.doorId=null; state.floor=null; state.buildingId=null; state.buildingName=null; render(); }
       if(step==="partials" && state.doorId){ state.screen="partials"; render(); }
     });
   });
@@ -295,10 +295,10 @@ function renderDoors(){
 function renderPartials(){
   const list = PARTIALS.filter(p=>p.door_id===state.doorId);
   viewEl.innerHTML = `
-    <h1 class="title">${doorName(state.doorId)} — 局部地圖</h1>
-    <p class="hint"></p>
+    <h1 class="title">${doorName(state.doorId)} — 局部地圖比對</h1>
+    <p class="hint">// 點擊與現場相符的局部地圖，確認後將顯示對應的完整平面圖</p>
     ${list.length ? `<div class="grid">${list.map(p=>`
-      <button class="card" data-id="${p.id}">
+      <button class="card" data-id="${p.id}" data-building="${p.building_id || p.door_id}" data-building-name="${p.building_name || p.label || p.building_id || p.door_id}">
         <div class="thumb"><img src="${p.image_url}" alt="${p.label||''}" loading="lazy"></div>
         <div class="label"><span>${p.label || "局部地圖"}</span><span class="go">確認 →</span></div>
       </button>
@@ -306,6 +306,8 @@ function renderPartials(){
   `;
   viewEl.querySelectorAll(".card").forEach(el=>{
     el.addEventListener("click", ()=>{
+      state.buildingId = el.dataset.building;
+      state.buildingName = el.dataset.buildingName;
       state.screen = "full";
       state.floor = null;
       render();
@@ -314,14 +316,14 @@ function renderPartials(){
 }
 
 function renderFull(){
-  const list = FULLS.filter(f=>f.door_id===state.doorId);
+  const list = FULLS.filter(f=>f.door_id===state.buildingId);
   const floors = [...new Set(list.map(f=>f.floor))].sort();
   if(!state.floor || !floors.includes(state.floor)) state.floor = floors[0] || null;
   const current = list.find(f=>f.floor===state.floor);
 
   viewEl.innerHTML = `
-    <h1 class="title">${doorName(state.doorId)} — 完整地圖</h1>
-    <p class="hint"></p>
+    <h1 class="title">${state.buildingName || state.buildingId} — 完整平面圖</h1>
+    <p class="hint">// 切換樓層查看完整地圖</p>
     ${list.length ? `
       <div class="floor-panel">
         <div class="floor-tabs">
@@ -330,7 +332,7 @@ function renderFull(){
         <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
         ${current && current.label ? `<div class="map-caption">${current.label}</div>` : ""}
       </div>
-    ` : `<div class="empty">這個側門形狀目前沒有對應的完整地圖，請至 FullMaps 分頁新增（door_id 需對應 "${state.doorId}"）。</div>`}
+    ` : `<div class="empty">這個局部地圖目前沒有對應的完整地圖，請至 FullMaps 分頁新增（door_id 欄位需對應 "${state.buildingId}"）。</div>`}
   `;
   viewEl.querySelectorAll(".floor-tab").forEach(el=>{
     el.addEventListener("click", ()=>{
@@ -339,7 +341,6 @@ function renderFull(){
     });
   });
 }
-
 (async function init(){
   try{
     await loadData();
