@@ -9,17 +9,17 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
 <style>
   :root{
-    --blueprint:#122A45;
-    --blueprint-2:#1C3D5F;
-    --blueprint-3:#254D73;
+    --blueprint:#000000;
+    --blueprint-2:#0D0D0D;
+    --blueprint-3:#161616;
     --line:#8FC1E3;
-    --line-dim:#4C7495;
-    --paper:#F5F1E6;
-    --paper-2:#EAE3D2;
-    --ink:#182634;
+    --line-dim:#333333;
+    --paper:#000000;
+    --paper-2:#1B1B1B;
+    --ink:#ECE7D8;
     --accent:#E8A33D;
     --accent-2:#D6862A;
-    --muted:#6B84A0;
+    --muted:#8A8A8A;
     --danger:#C0604A;
     --radius:2px;
   }
@@ -32,7 +32,7 @@
       linear-gradient(90deg, var(--line-dim) 1px, transparent 1px);
     background-size:28px 28px;
     background-attachment:fixed;
-    color:var(--paper);
+    color:var(--ink);
     font-family:'IBM Plex Sans', sans-serif;
     min-height:100vh;
   }
@@ -104,7 +104,7 @@
   .floor-tab.active{background:var(--accent); color:#1B2838; font-weight:600;}
   .floor-tab:hover:not(.active){background:#DDD4BC;}
   .map-frame{
-    border:1px solid var(--paper-2); background:repeating-linear-gradient(45deg, #fff 0 10px, #F8F5EC 10px 20px);
+    border:1px solid var(--paper-2); background:repeating-linear-gradient(45deg, #000 0 10px, #0A0A0A 10px 20px);
     display:flex; align-items:center; justify-content:center; min-height:260px; border-radius:var(--radius);
     overflow:auto;
   }
@@ -140,9 +140,9 @@
    教學請見附上的 SETUP-GUIDE.md
    ========================================================================= */
 const CONFIG = {
-  DOORS_CSV_URL:        "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRr3B1rK-O7b9m9Ak50I6WvUMPD15MFPz4uOjVJGbrL0ER2z3Sw205_tT1GtU0_zhPatbdXstTmg1G/pub?gid=0&single=true&output=csv",
-  PARTIAL_MAPS_CSV_URL: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRr3B1rK-O7b9m9Ak50I6WvUMPD15MFPz4uOjVJGbrL0ER2z3Sw205_tT1GtU0_zhPatbdXstTmg1G/pub?gid=288948299&single=true&output=csv",
-  FULL_MAPS_CSV_URL:    "https://docs.google.com/spreadsheets/d/e/2PACX-1vQRr3B1rK-O7b9m9Ak50I6WvUMPD15MFPz4uOjVJGbrL0ER2z3Sw205_tT1GtU0_zhPatbdXstTmg1G/pub?gid=886262015&single=true&output=csv",
+  DOORS_CSV_URL:        "PASTE_DOORS_CSV_URL_HERE",
+  PARTIAL_MAPS_CSV_URL: "PASTE_PARTIALMAPS_CSV_URL_HERE",
+  FULL_MAPS_CSV_URL:    "PASTE_FULLMAPS_CSV_URL_HERE",
 };
 /* ========================================================================= */
 
