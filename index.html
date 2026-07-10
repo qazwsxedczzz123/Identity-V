@@ -66,6 +66,12 @@
   .grid{
     display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:16px;
   }
+  @media (max-width: 640px){
+    .grid.doors-grid{
+      grid-template-columns:repeat(2, 1fr);
+      gap:12px;
+    }
+  }
   .card{
     background:var(--paper); border-radius:var(--radius); overflow:hidden; cursor:pointer;
     border:1px solid var(--paper-2); text-align:left; padding:0; color:var(--ink);
@@ -276,7 +282,7 @@ function renderDoors(){
   viewEl.innerHTML = `
     <h1 class="title">側門形狀</h1>
     <p class="hint"></p>
-    ${DOORS.length ? `<div class="grid">${DOORS.map(d=>`
+    ${DOORS.length ? `<div class="grid doors-grid">${DOORS.map(d=>`
       <button class="card" data-id="${d.id}">
         <div class="thumb"><img src="${d.image_url}" alt="${d.name}" loading="lazy"></div>
         <div class="label"><span>${d.name}</span><span class="go">選取 →</span></div>
