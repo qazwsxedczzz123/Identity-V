@@ -248,8 +248,8 @@ async function fetchCsv(url){
 }
 
 async function loadData(){
-  if(DEMO_MODE){
-    DOORS = DEMO_DOORS; PARTIALS = DEMO_PARTIALS; FULLS = DEMO_FULL;
+if(DEMO_MODE){
+    DOORS = sortByOrder(DEMO_DOORS); PARTIALS = DEMO_PARTIALS; FULLS = DEMO_FULL;
     return;
   }
   viewEl.innerHTML = `<div class="loading">讀取資料中 …</div>`;
@@ -258,7 +258,17 @@ async function loadData(){
     fetchCsv(CONFIG.PARTIAL_MAPS_CSV_URL),
     fetchCsv(CONFIG.FULL_MAPS_CSV_URL),
   ]);
-  DOORS = doors; PARTIALS = partials; FULLS = fulls;
+  DOORS = sortByOrder(doors);
+  PARTIALS = partials; FULLS = fulls;
+}
+
+function sortByOrder(rows){
+  return [...rows].sort((a,b)=>{
+    const oa = a.order === "" || a.order === undefined ? Infinity : Number(a.order);
+    const ob = b.order === "" || b.order === undefined ? Infinity : Number(b.order);
+    if(oa !== ob) return oa - ob;
+    return 0;
+  });
 }
 
 function doorName(id){
