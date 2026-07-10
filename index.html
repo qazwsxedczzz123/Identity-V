@@ -375,8 +375,8 @@ function renderFull(){
   const zoomIn = document.getElementById("zoomIn");
   const zoomOut = document.getElementById("zoomOut");
   const zoomReset = document.getElementById("zoomReset");
-  if(zoomIn) zoomIn.addEventListener("click", ()=> adjustZoom(0.5));
-  if(zoomOut) zoomOut.addEventListener("click", ()=> adjustZoom(-0.5));
+  if(zoomIn) zoomIn.addEventListener("click", ()=> adjustZoom(1));
+  if(zoomOut) zoomOut.addEventListener("click", ()=> adjustZoom(-1));
   if(zoomReset) zoomReset.addEventListener("click", ()=>{
     state.zoom = 1;
     renderFull();
