@@ -97,7 +97,19 @@
   }
 
   .floor-panel{background:var(--paper); border-radius:var(--radius); padding:18px; color:var(--ink);}
-  .floor-tabs{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
+  .controls-row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
+  .floor-tabs{display:flex; gap:8px; flex-wrap:wrap;}
+  .zoom-controls{display:flex; align-items:center; gap:6px;}
+  .zoom-btn{
+    font-family:'IBM Plex Mono', monospace; font-size:14px; width:30px; height:30px;
+    background:var(--paper-2); color:var(--ink); border:1px solid transparent; border-radius:var(--radius);
+    cursor:pointer; display:flex; align-items:center; justify-content:center;
+  }
+  .zoom-btn:hover{background:#2A2A2A;}
+  .zoom-value{font-family:'IBM Plex Mono', monospace; font-size:12px; color:var(--muted); min-width:42px; text-align:center;}
+  @media (max-width: 640px){
+    .zoom-controls{display:none;}
+  }
   .floor-tab{
     font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:.06em;
     background:var(--paper-2); color:var(--ink); border:1px solid transparent; padding:8px 16px;
@@ -108,9 +120,9 @@
   .map-frame{
     border:1px solid var(--paper-2); background:repeating-linear-gradient(45deg, #000 0 10px, #0A0A0A 10px 20px);
     display:flex; align-items:center; justify-content:center; border-radius:var(--radius);
-    aspect-ratio:4/3; max-width:640px; margin:0 auto; overflow:hidden;
+    aspect-ratio:4/3; max-width:640px; margin:0 auto; overflow:auto;
   }
-  .map-frame img{max-width:100%; max-height:100%; object-fit:contain; display:block;}
+  .map-frame img{max-width:100%; max-height:100%; object-fit:contain; display:block; transition:transform .15s ease;}
   @media (max-width: 640px){
     .map-frame{
       aspect-ratio:auto; max-width:none;
@@ -211,7 +223,7 @@ function svgMap(text, bg){
 
 // ---- app state ----
 let DOORS = [], PARTIALS = [], FULLS = [];
-let state = { screen:"doors", doorId:null, floor:null, buildingId:null, buildingName:null };
+let state = { screen:"doors", doorId:null, floor:null, buildingId:null, buildingName:null, zoom:1 };
 
 const viewEl = document.getElementById("view");
 const crumbsEl = document.getElementById("crumbs");
@@ -316,6 +328,7 @@ function renderPartials(){
       state.buildingName = el.dataset.buildingName;
       state.screen = "full";
       state.floor = null;
+      state.zoom = 1;
       render();
     });
   });
@@ -332,10 +345,18 @@ function renderFull(){
     <p class="hint">第五人格怪還是太少了</p>
     ${list.length ? `
       <div class="floor-panel">
-        <div class="floor-tabs">
-          ${floors.map(fl=>`<button class="floor-tab ${fl===state.floor?'active':''}" data-floor="${fl}">${fl}</button>`).join("")}
+        <div class="controls-row">
+          <div class="floor-tabs">
+            ${floors.map(fl=>`<button class="floor-tab ${fl===state.floor?'active':''}" data-floor="${fl}">${fl}</button>`).join("")}
+          </div>
+          <div class="zoom-controls">
+            <button class="zoom-btn" id="zoomOut" title="縮小">－</button>
+            <span class="zoom-value">${Math.round(state.zoom*100)}%</span>
+            <button class="zoom-btn" id="zoomIn" title="放大">＋</button>
+            <button class="zoom-btn" id="zoomReset" title="重設">⟲</button>
+          </div>
         </div>
-        <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
+        <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="transform:scale(${state.zoom});">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
         ${current && current.label ? `<div class="map-caption">${current.label}</div>` : ""}
       </div>
     ` : `<div class="empty">這個局部地圖目前沒有對應的完整地圖，請至 FullMaps 分頁新增（door_id 欄位需對應 "${state.buildingId}"）。</div>`}
@@ -343,8 +364,24 @@ function renderFull(){
   viewEl.querySelectorAll(".floor-tab").forEach(el=>{
     el.addEventListener("click", ()=>{
       state.floor = el.dataset.floor;
+      state.zoom = 1;
       renderFull();
     });
+  });
+  const zoomIn = document.getElementById("zoomIn");
+  const zoomOut = document.getElementById("zoomOut");
+  const zoomReset = document.getElementById("zoomReset");
+  if(zoomIn) zoomIn.addEventListener("click", ()=>{
+    state.zoom = Math.min(3, +(state.zoom + 0.2).toFixed(2));
+    renderFull();
+  });
+  if(zoomOut) zoomOut.addEventListener("click", ()=>{
+    state.zoom = Math.max(0.4, +(state.zoom - 0.2).toFixed(2));
+    renderFull();
+  });
+  if(zoomReset) zoomReset.addEventListener("click", ()=>{
+    state.zoom = 1;
+    renderFull();
   });
 }
 (async function init(){
