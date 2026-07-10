@@ -270,8 +270,8 @@ function render(){
 
 function renderDoors(){
   viewEl.innerHTML = `
-    <h1 class="title">請選擇側門形狀</h1>
-    <p class="hint">// 點擊符合現場外觀的側門圖片</p>
+    <h1 class="title">側門形狀</h1>
+    <p class="hint">// 三步驟簡單查詢</p>
     ${DOORS.length ? `<div class="grid">${DOORS.map(d=>`
       <button class="card" data-id="${d.id}">
         <div class="thumb"><img src="${d.image_url}" alt="${d.name}" loading="lazy"></div>
