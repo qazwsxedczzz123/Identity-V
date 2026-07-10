@@ -301,8 +301,8 @@ function renderDoors(){
 function renderPartials(){
   const list = PARTIALS.filter(p=>p.door_id===state.doorId);
   viewEl.innerHTML = `
-    <h1 class="title">${doorName(state.doorId)} — 局部地圖比對</h1>
-    <p class="hint">// 點擊與現場相符的局部地圖，確認後將顯示對應的完整平面圖</p>
+    <h1 class="title">${doorName(state.doorId)} — 局部地圖</h1>
+    <p class="hint"></p>
     ${list.length ? `<div class="grid">${list.map(p=>`
       <button class="card" data-id="${p.id}" data-building="${p.building_id || p.door_id}" data-building-name="${p.building_name || p.label || p.building_id || p.door_id}">
         <div class="thumb"><img src="${p.image_url}" alt="${p.label||''}" loading="lazy"></div>
@@ -328,8 +328,8 @@ function renderFull(){
   const current = list.find(f=>f.floor===state.floor);
 
   viewEl.innerHTML = `
-    <h1 class="title">${state.buildingName || state.buildingId} — 完整平面圖</h1>
-    <p class="hint">// 切換樓層查看完整地圖</p>
+    <h1 class="title">${state.buildingName || state.buildingId} — 完整地圖</h1>
+    <p class="hint"></p>
     ${list.length ? `
       <div class="floor-panel">
         <div class="floor-tabs">
