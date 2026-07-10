@@ -66,8 +66,8 @@
   .grid{
     display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:16px;
   }
-  @media (max-width: 640px){
-    .grid.doors-grid{
+@media (max-width: 640px){
+    .grid.doors-grid, .grid.partials-grid{
       grid-template-columns:repeat(2, 1fr);
       gap:12px;
     }
@@ -303,7 +303,7 @@ function renderPartials(){
   viewEl.innerHTML = `
     <h1 class="title">${doorName(state.doorId)} — 局部地圖</h1>
     <p class="hint"></p>
-    ${list.length ? `<div class="grid">${list.map(p=>`
+    ${list.length ? `<div class="grid partials-grid">${list.map(p=>`
       <button class="card" data-id="${p.id}" data-building="${p.building_id || p.door_id}" data-building-name="${p.building_name || p.label || p.building_id || p.door_id}">
         <div class="thumb"><img src="${p.image_url}" alt="${p.label||''}" loading="lazy"></div>
         <div class="label"><span>${p.label || "局部地圖"}</span><span class="go">確認 →</span></div>
