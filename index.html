@@ -60,6 +60,21 @@
   nav.crumbs .step.done:hover{color:#fff;}
   nav.crumbs .sep{color:var(--line-dim);}
 
+  .region-bar{
+    display:flex; align-items:center; gap:10px; flex-wrap:wrap;
+    padding-bottom:14px; margin-bottom:20px; border-bottom:1px dashed var(--line-dim);
+  }
+  .region-bar .region-label{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em;
+  }
+  .region-chip{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px;
+    background:var(--paper-2); color:var(--ink); border:1px solid transparent; padding:6px 14px;
+    border-radius:var(--radius); cursor:pointer;
+  }
+  .region-chip.active{background:var(--accent); color:#1B2838; font-weight:600;}
+  .region-chip:hover:not(.active){background:#2A2A2A;}
+
   h1.title{font-family:'Space Grotesk', sans-serif; font-size:26px; margin:0 0 4px; font-weight:600;}
   p.hint{color:var(--line); font-size:13.5px; margin:0 0 28px; font-family:'IBM Plex Mono', monospace;}
 
@@ -152,6 +167,7 @@
     </div>
   </header>
 
+  <div class="region-bar" id="regionBar"></div>
   <nav class="crumbs" id="crumbs"></nav>
 
   <div id="view"></div>
@@ -227,10 +243,36 @@ function svgMap(text, bg){
 
 // ---- app state ----
 let DOORS = [], PARTIALS = [], FULLS = [];
-let state = { screen:"doors", doorId:null, floor:null, buildingId:null, buildingName:null, zoom:1 };
+let state = { screen:"doors", doorId:null, floor:null, buildingId:null, buildingName:null, zoom:1, region:null };
 
 const viewEl = document.getElementById("view");
 const crumbsEl = document.getElementById("crumbs");
+const regionBarEl = document.getElementById("regionBar");
+
+function getRegions(){
+  const set = new Set();
+  DOORS.forEach(d=>{ if(d.region) set.add(d.region); });
+  PARTIALS.forEach(p=>{ if(p.region) set.add(p.region); });
+  return [...set];
+}
+
+function renderRegionBar(){
+  const regions = getRegions();
+  if(regions.length === 0){ regionBarEl.innerHTML = ""; return; }
+  regionBarEl.innerHTML = `
+    <span class="region-label">選擇地區</span>
+    <button class="region-chip ${!state.region ? 'active' : ''}" data-region="">全部</button>
+    ${regions.map(r=>`<button class="region-chip ${state.region===r ? 'active' : ''}" data-region="${r}">${r}</button>`).join("")}
+  `;
+  regionBarEl.querySelectorAll(".region-chip").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      state.region = el.dataset.region || null;
+      state.screen = "doors";
+      state.doorId = null; state.floor = null; state.buildingId = null; state.buildingName = null;
+      render();
+    });
+  });
+}
 
 function csvToObjects(csvText){
   const res = Papa.parse(csvText.trim(), {header:true, skipEmptyLines:true});
@@ -298,6 +340,7 @@ function renderCrumbs(){
 }
 
 function render(){
+  renderRegionBar();
   renderCrumbs();
   if(state.screen==="doors") return renderDoors();
   if(state.screen==="partials") return renderPartials();
@@ -305,15 +348,16 @@ function render(){
 }
 
 function renderDoors(){
+  const list = state.region ? DOORS.filter(d=>!d.region || d.region===state.region) : DOORS;
   viewEl.innerHTML = `
     <h1 class="title">側門形狀</h1>
     <p class="hint">太多燭台了，燭台遠離我:3</p>
-    ${DOORS.length ? `<div class="grid doors-grid">${DOORS.map(d=>`
+    ${list.length ? `<div class="grid doors-grid">${list.map(d=>`
       <button class="card" data-id="${d.id}">
         <div class="thumb"><img src="${d.image_url}" alt="${d.name}" loading="lazy"></div>
         <div class="label"><span>${d.name}</span><span class="go">選取 →</span></div>
       </button>
-    `).join("")}</div>` : `<div class="empty">目前沒有任何側門圖片，請至 Google 試算表的 Doors 分頁新增。</div>`}
+    `).join("")}</div>` : `<div class="empty">這個地區目前沒有側門圖片，請至 Google 試算表的 Doors 分頁新增（region 需對應 "${state.region}"）。</div>`}
   `;
   viewEl.querySelectorAll(".card").forEach(el=>{
     el.addEventListener("click", ()=>{
@@ -325,7 +369,7 @@ function renderDoors(){
 }
 
 function renderPartials(){
-  const list = PARTIALS.filter(p=>p.door_id===state.doorId);
+  const list = PARTIALS.filter(p=>p.door_id===state.doorId && (!state.region || !p.region || p.region===state.region));
   viewEl.innerHTML = `
     <h1 class="title">${doorName(state.doorId)} — 局部地圖</h1>
     <p class="hint">【鹿管99】不要來打我</p>
