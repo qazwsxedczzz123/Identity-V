@@ -307,7 +307,7 @@ function render(){
 function renderDoors(){
   viewEl.innerHTML = `
     <h1 class="title">側門形狀</h1>
-    <p class="hint"></p>
+    <p class="hint">太多燭台了，燭台遠離我:3</p>
     ${DOORS.length ? `<div class="grid doors-grid">${DOORS.map(d=>`
       <button class="card" data-id="${d.id}">
         <div class="thumb"><img src="${d.image_url}" alt="${d.name}" loading="lazy"></div>
@@ -328,7 +328,7 @@ function renderPartials(){
   const list = PARTIALS.filter(p=>p.door_id===state.doorId);
   viewEl.innerHTML = `
     <h1 class="title">${doorName(state.doorId)} — 局部地圖</h1>
-    <p class="hint"></p>
+    <p class="hint">【鹿管99】不要來打我</p>
     ${list.length ? `<div class="grid partials-grid">${list.map(p=>`
       <button class="card" data-id="${p.id}" data-building="${p.building_id || p.door_id}" data-building-name="${p.building_name || p.label || p.building_id || p.door_id}">
         <div class="thumb"><img src="${p.image_url}" alt="${p.label||''}" loading="lazy"></div>
