@@ -436,7 +436,16 @@ function renderFull(){
     state.zoom = 1;
     renderFull();
   });
-  enableMapDrag();
+enableMapDrag();
+  preloadFloorImages(list);
+}
+
+function preloadFloorImages(list){
+  list.forEach(f=>{
+    if(f.floor === state.floor) return;
+    const img = new Image();
+    img.src = f.image_url;
+  });
 }
 
 function zoomImgStyle(zoom){
