@@ -261,7 +261,7 @@ function renderRegionBar(){
   if(regions.length === 0){ regionBarEl.innerHTML = ""; return; }
   if(!state.region) state.region = regions[0];
   regionBarEl.innerHTML = `
-    <span class="region-label">選擇故事</span>
+    <span class="region-label">故事</span>
     ${regions.map(r=>`<button class="region-chip ${state.region===r ? 'active' : ''}" data-region="${r}">${r}</button>`).join("")}
   `;
   regionBarEl.querySelectorAll(".region-chip").forEach(el=>{
