@@ -259,14 +259,14 @@ function getRegions(){
 function renderRegionBar(){
   const regions = getRegions();
   if(regions.length === 0){ regionBarEl.innerHTML = ""; return; }
+  if(!state.region) state.region = regions[0];
   regionBarEl.innerHTML = `
-    <span class="region-label">選擇地區</span>
-    <button class="region-chip ${!state.region ? 'active' : ''}" data-region="">全部</button>
+    <span class="region-label">選擇故事</span>
     ${regions.map(r=>`<button class="region-chip ${state.region===r ? 'active' : ''}" data-region="${r}">${r}</button>`).join("")}
   `;
   regionBarEl.querySelectorAll(".region-chip").forEach(el=>{
     el.addEventListener("click", ()=>{
-      state.region = el.dataset.region || null;
+      state.region = el.dataset.region;
       state.screen = "doors";
       state.doorId = null; state.floor = null; state.buildingId = null; state.buildingName = null;
       render();
