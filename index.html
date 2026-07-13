@@ -97,23 +97,32 @@ header.top{
     padding-bottom:14px; margin-bottom:20px; border-bottom:1px dashed var(--line-dim);
   }
   .popular-bar{
-    padding-bottom:14px; margin-bottom:20px; border-bottom:1px dashed var(--line-dim);
+    padding-bottom:20px; margin-bottom:20px; border-bottom:1px dashed var(--line-dim);
   }
   .popular-bar .popular-label{
     font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em;
-    display:block; margin-bottom:10px;
+    display:block; margin-bottom:12px;
   }
-  .popular-list{display:flex; gap:12px; flex-wrap:wrap;}
+  .popular-list{
+    display:grid; grid-template-columns:repeat(auto-fill, minmax(180px,1fr)); gap:16px;
+  }
   .popular-item{
-    display:flex; align-items:center; gap:8px; cursor:pointer;
-    background:var(--paper-2); border:1px solid transparent; border-radius:var(--radius);
-    padding:6px 10px 6px 6px; transition:background .15s ease;
+    background:var(--paper); border-radius:var(--radius); overflow:hidden; cursor:pointer;
+    border:1px solid var(--paper-2); display:flex; flex-direction:column;
+    transition:transform .15s ease, box-shadow .15s ease;
   }
-  .popular-item:hover{background:#2A2A2A;}
-  .popular-item img{width:44px; height:34px; object-fit:cover; border-radius:1px; display:block;}
-  .popular-item .pop-text{display:flex; flex-direction:column; gap:2px;}
-  .popular-item .pop-name{font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink);}
-  .popular-item .pop-count{font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--accent-2);}
+  .popular-item:hover{transform:translateY(-3px); box-shadow:0 10px 24px rgba(0,0,0,.35);}
+  .popular-item .pop-thumb{
+    aspect-ratio:4/3; width:100%; background:var(--paper-2);
+    display:flex; align-items:center; justify-content:center; overflow:hidden;
+  }
+  .popular-item .pop-thumb img{width:100%; height:100%; object-fit:contain; display:block;}
+  .popular-item .pop-text{
+    font-family:'IBM Plex Mono', monospace; font-size:12.5px; padding:9px 10px;
+    border-top:1px dashed var(--paper-2); display:flex; align-items:center; justify-content:space-between;
+  }
+  .popular-item .pop-name{color:var(--ink);}
+  .popular-item .pop-count{color:var(--accent-2); font-weight:600;}
   @media (max-width: 640px){
     .popular-bar{display:none;}
   }
@@ -342,17 +351,17 @@ async function renderPopularBar(){
   if(ranked.length === 0){ popularBarEl.innerHTML = ""; return; }
 
   popularBarEl.innerHTML = `
-    <span class="popular-label">熱門常出現局部地圖</span>
+    <span class="popular-label">熱門地圖</span>
     <div class="popular-list">
       ${ranked.map(([buildingId,count])=>{
         const p = PARTIALS.find(p=> (p.building_id || p.door_id) === buildingId);
         const thumb = p ? p.image_url : "";
         const name = p ? (p.building_name || p.label || buildingId) : buildingId;
-        return `<div class="popular-item" data-building="${buildingId}" data-building-name="${name}">
-          ${thumb ? `<img src="${thumb}" alt="${name}">` : ""}
+return `<div class="popular-item" data-building="${buildingId}" data-building-name="${name}">
+          <div class="pop-thumb">${thumb ? `<img src="${thumb}" alt="${name}">` : ""}</div>
           <div class="pop-text">
             <span class="pop-name">${name}</span>
-            <span class="pop-count">出現 ${count} 次</span>
+            <span class="pop-count">${count} 次</span>
           </div>
         </div>`;
       }).join("")}
