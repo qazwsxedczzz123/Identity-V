@@ -24,10 +24,15 @@
   const fbApp = initializeApp(firebaseConfig);
   const db = getDatabase(fbApp);
 
-  window.__mapClicks = {
+window.__mapClicks = {
     async increment(buildingId){
       const r = ref(db, "mapClicks/" + buildingId);
       const res = await runTransaction(r, (cur)=> (cur || 0) + 1);
+      return res.snapshot.val();
+    },
+    async incrementBy(buildingId, delta){
+      const r = ref(db, "mapClicks/" + buildingId);
+      const res = await runTransaction(r, (cur)=> Math.max(0, (cur || 0) + delta));
       return res.snapshot.val();
     },
     async getAll(){
@@ -147,6 +152,8 @@ header.top{
   }
   .click-btn:hover:not(:disabled){background:var(--accent-2);}
   .click-btn:disabled{opacity:.4; cursor:not-allowed; background:var(--paper-2); color:var(--muted);}
+  .click-btn-minus{background:var(--paper-2); color:var(--ink); border:1px solid var(--line-dim);}
+  .click-btn-minus:hover:not(:disabled){background:#2A2A2A;}
   .region-bar .region-label{
     font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em;
   }
@@ -558,7 +565,8 @@ function renderFull(){
 <div class="click-panel">
           <span class="click-text">出現該地圖：<span class="click-count" id="clickCount">…</span> 次</span>
           <div class="click-auth">
-           <input type="text" class="click-code" id="clickCode" placeholder="">
+            <input type="text" class="click-code" id="clickCode" placeholder="">
+            <button class="click-btn click-btn-minus" id="clickMinusBtn" disabled>－1</button>
             <button class="click-btn" id="clickPlusBtn" disabled>+1</button>
           </div>
         </div>
@@ -580,13 +588,14 @@ enableMapDrag();
   setupClickCounter();
 }
 
-const CLICK_PASSCODE = "x";
+const CLICK_PASSCODE = "0";
 
 function setupClickCounter(){
   const btn = document.getElementById("clickPlusBtn");
+  const minusBtn = document.getElementById("clickMinusBtn");
   const countEl = document.getElementById("clickCount");
   const codeInput = document.getElementById("clickCode");
-  if(!btn || !countEl || !codeInput || !state.buildingId) return;
+  if(!btn || !minusBtn || !countEl || !codeInput || !state.buildingId) return;
 
   const refreshCount = async ()=>{
     try{
@@ -601,23 +610,31 @@ function setupClickCounter(){
   else{ window.addEventListener("mapClicksReady", refreshCount, {once:true}); }
 
   const checkCode = ()=>{
-    btn.disabled = codeInput.value.trim() !== CLICK_PASSCODE;
+    const ok = codeInput.value.trim() === CLICK_PASSCODE;
+    btn.disabled = !ok;
+    minusBtn.disabled = !ok;
   };
   codeInput.addEventListener("input", checkCode);
   checkCode();
 
-  btn.addEventListener("click", async ()=>{
+  const changeBy = async (delta)=>{
     if(codeInput.value.trim() !== CLICK_PASSCODE) return;
     btn.disabled = true;
+    minusBtn.disabled = true;
     try{
-      const newVal = await window.__mapClicks.increment(state.buildingId);
+      const r = window.__mapClicksRef ? null : null;
+      const newVal = await window.__mapClicks.incrementBy(state.buildingId, delta);
       countEl.textContent = newVal;
     }catch(e){
       alert("紀錄失敗，請檢查網路連線");
     }
     codeInput.value = "";
     btn.disabled = true;
-  });
+    minusBtn.disabled = true;
+  };
+
+  btn.addEventListener("click", ()=> changeBy(1));
+  minusBtn.addEventListener("click", ()=> changeBy(-1));
 }
 
 function preloadFloorImages(list){
