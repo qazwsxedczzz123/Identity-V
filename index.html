@@ -471,7 +471,11 @@ function renderCrumbs(){
 
 function render(){
   renderRegionBar();
-  renderPopularBar();
+  if(state.screen==="doors"){
+    renderPopularBar();
+  }else if(popularBarEl){
+    popularBarEl.innerHTML = "";
+  }
   renderCrumbs();
   if(state.screen==="doors") return renderDoors();
   if(state.screen==="partials") return renderPartials();
