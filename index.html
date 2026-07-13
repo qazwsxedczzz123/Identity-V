@@ -8,6 +8,37 @@
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Cpath fill='%23111' d='M50 20 L20 5 L28 32 Q15 42 15 58 Q15 85 50 90 Q85 85 85 58 Q85 42 72 32 L80 5 Z'/%3E%3Ccircle cx='36' cy='55' r='4' fill='%23E8A33D'/%3E%3Ccircle cx='64' cy='55' r='4' fill='%23E8A33D'/%3E%3Cpath d='M45 65 L50 70 L55 65' stroke='%23000' stroke-width='2' fill='none'/%3E%3C/svg%3E">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getDatabase, ref, get, set, runTransaction } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyBv04PHXf9heBmwWIgxTDbiKpDYyM8sRMY",
+    authDomain: "identity-v-39138.firebaseapp.com",
+    databaseURL: "https://identity-v-39138-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "identity-v-39138",
+    storageBucket: "identity-v-39138.firebasestorage.app",
+    messagingSenderId: "255096875809",
+    appId: "1:255096875809:web:13a2af030dd4056fc42c60"
+  };
+  const fbApp = initializeApp(firebaseConfig);
+  const db = getDatabase(fbApp);
+
+  window.__mapClicks = {
+    async increment(buildingId){
+      const r = ref(db, "mapClicks/" + buildingId);
+      const res = await runTransaction(r, (cur)=> (cur || 0) + 1);
+      return res.snapshot.val();
+    },
+    async getAll(){
+      const r = ref(db, "mapClicks");
+      const snap = await get(r);
+      return snap.exists() ? snap.val() : {};
+    }
+  };
+  window.__mapClicksReady = true;
+  window.dispatchEvent(new Event("mapClicksReady"));
+</script>
 <style>
   :root{
     --blueprint:#000000;
@@ -65,6 +96,41 @@ header.top{
     display:flex; align-items:center; gap:10px; flex-wrap:wrap;
     padding-bottom:14px; margin-bottom:20px; border-bottom:1px dashed var(--line-dim);
   }
+  .popular-bar{
+    padding-bottom:14px; margin-bottom:20px; border-bottom:1px dashed var(--line-dim);
+  }
+  .popular-bar .popular-label{
+    font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em;
+    display:block; margin-bottom:10px;
+  }
+  .popular-list{display:flex; gap:12px; flex-wrap:wrap;}
+  .popular-item{
+    display:flex; align-items:center; gap:8px; cursor:pointer;
+    background:var(--paper-2); border:1px solid transparent; border-radius:var(--radius);
+    padding:6px 10px 6px 6px; transition:background .15s ease;
+  }
+  .popular-item:hover{background:#2A2A2A;}
+  .popular-item img{width:44px; height:34px; object-fit:cover; border-radius:1px; display:block;}
+  .popular-item .pop-text{display:flex; flex-direction:column; gap:2px;}
+  .popular-item .pop-name{font-family:'IBM Plex Mono', monospace; font-size:11.5px; color:var(--ink);}
+  .popular-item .pop-count{font-family:'IBM Plex Mono', monospace; font-size:10.5px; color:var(--accent-2);}
+  @media (max-width: 640px){
+    .popular-bar{display:none;}
+  }
+
+  .click-panel{
+    margin-top:20px; padding-top:16px; border-top:1px dashed var(--line-dim);
+    display:flex; align-items:center; justify-content:space-between; gap:14px; flex-wrap:wrap;
+  }
+  .click-panel .click-text{font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--line);}
+  .click-panel .click-count{color:var(--accent); font-weight:600;}
+  .click-btn{
+    font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:.04em;
+    background:var(--accent); color:#1B2838; border:none; padding:9px 20px;
+    border-radius:var(--radius); cursor:pointer; font-weight:600;
+  }
+  .click-btn:hover{background:var(--accent-2);}
+  .click-btn:disabled{opacity:.5; cursor:default;}
   .region-bar .region-label{
     font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em;
   }
@@ -170,7 +236,8 @@ header.top{
     </div>
   </header>
 
-  <div class="region-bar" id="regionBar"></div>
+ <div class="region-bar" id="regionBar"></div>
+  <div class="popular-bar" id="popularBar"></div>
   <nav class="crumbs" id="crumbs"></nav>
 
   <div id="view"></div>
@@ -252,6 +319,56 @@ let state = { screen:"doors", doorId:null, floor:null, buildingId:null, building
 const viewEl = document.getElementById("view");
 const crumbsEl = document.getElementById("crumbs");
 const regionBarEl = document.getElementById("regionBar");
+const popularBarEl = document.getElementById("popularBar");
+
+async function renderPopularBar(){
+  if(!popularBarEl) return;
+  if(!window.__mapClicksReady){
+    window.addEventListener("mapClicksReady", renderPopularBar, {once:true});
+    return;
+  }
+  let clicks = {};
+  try{
+    clicks = await window.__mapClicks.getAll();
+  }catch(e){
+    popularBarEl.innerHTML = "";
+    return;
+  }
+  const ranked = Object.entries(clicks)
+    .filter(([id,count])=> count > 0)
+    .sort((a,b)=> b[1]-a[1])
+    .slice(0,5);
+
+  if(ranked.length === 0){ popularBarEl.innerHTML = ""; return; }
+
+  popularBarEl.innerHTML = `
+    <span class="popular-label">熱門常出現局部地圖</span>
+    <div class="popular-list">
+      ${ranked.map(([buildingId,count])=>{
+        const p = PARTIALS.find(p=> (p.building_id || p.door_id) === buildingId);
+        const thumb = p ? p.image_url : "";
+        const name = p ? (p.building_name || p.label || buildingId) : buildingId;
+        return `<div class="popular-item" data-building="${buildingId}" data-building-name="${name}">
+          ${thumb ? `<img src="${thumb}" alt="${name}">` : ""}
+          <div class="pop-text">
+            <span class="pop-name">${name}</span>
+            <span class="pop-count">出現 ${count} 次</span>
+          </div>
+        </div>`;
+      }).join("")}
+    </div>
+  `;
+  popularBarEl.querySelectorAll(".popular-item").forEach(el=>{
+    el.addEventListener("click", ()=>{
+      state.buildingId = el.dataset.building;
+      state.buildingName = el.dataset.buildingName;
+      state.screen = "full";
+      state.floor = null;
+      state.zoom = 1;
+      render();
+    });
+  });
+}
 
 function getRegions(){
   const set = new Set();
@@ -345,6 +462,7 @@ function renderCrumbs(){
 
 function render(){
   renderRegionBar();
+  renderPopularBar();
   renderCrumbs();
   if(state.screen==="doors") return renderDoors();
   if(state.screen==="partials") return renderPartials();
@@ -417,6 +535,10 @@ function renderFull(){
         </div>
         <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="${zoomImgStyle(state.zoom)}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
         ${current && current.label ? `<div class="map-caption">${current.label}</div>` : ""}
+        <div class="click-panel">
+          <span class="click-text">出現該地圖：<span class="click-count" id="clickCount">…</span> 次</span>
+          <button class="click-btn" id="clickPlusBtn">+1</button>
+        </div>
       </div>
     ` : `<div class="empty">這個局部地圖目前沒有對應的完整地圖，請至 FullMaps 分頁新增（door_id 欄位需對應 "${state.buildingId}"）。</div>`}
   `;
@@ -432,6 +554,36 @@ viewEl.querySelectorAll(".zoom-level").forEach(el=>{
   });
 enableMapDrag();
   preloadFloorImages(list);
+  setupClickCounter();
+}
+
+function setupClickCounter(){
+  const btn = document.getElementById("clickPlusBtn");
+  const countEl = document.getElementById("clickCount");
+  if(!btn || !countEl || !state.buildingId) return;
+
+  const refreshCount = async ()=>{
+    try{
+      const all = await window.__mapClicks.getAll();
+      countEl.textContent = all[state.buildingId] || 0;
+    }catch(e){
+      countEl.textContent = "—";
+    }
+  };
+
+  if(window.__mapClicksReady){ refreshCount(); }
+  else{ window.addEventListener("mapClicksReady", refreshCount, {once:true}); }
+
+  btn.addEventListener("click", async ()=>{
+    btn.disabled = true;
+    try{
+      const newVal = await window.__mapClicks.increment(state.buildingId);
+      countEl.textContent = newVal;
+    }catch(e){
+      alert("紀錄失敗，請檢查網路連線");
+    }
+    btn.disabled = false;
+  });
 }
 
 function preloadFloorImages(list){
