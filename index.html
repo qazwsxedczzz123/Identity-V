@@ -133,13 +133,20 @@ header.top{
   }
   .click-panel .click-text{font-family:'IBM Plex Mono', monospace; font-size:13px; color:var(--line);}
   .click-panel .click-count{color:var(--accent); font-weight:600;}
+ .click-auth{display:flex; align-items:center; gap:8px;}
+  .click-code{
+    font-family:'IBM Plex Mono', monospace; font-size:13px;
+    background:var(--paper-2); color:var(--ink); border:1px solid transparent;
+    padding:8px 10px; border-radius:var(--radius); width:110px;
+  }
+  .click-code:focus{outline:1px solid var(--accent);}
   .click-btn{
     font-family:'IBM Plex Mono', monospace; font-size:13px; letter-spacing:.04em;
     background:var(--accent); color:#1B2838; border:none; padding:9px 20px;
     border-radius:var(--radius); cursor:pointer; font-weight:600;
   }
-  .click-btn:hover{background:var(--accent-2);}
-  .click-btn:disabled{opacity:.5; cursor:default;}
+  .click-btn:hover:not(:disabled){background:var(--accent-2);}
+  .click-btn:disabled{opacity:.4; cursor:not-allowed; background:var(--paper-2); color:var(--muted);}
   .region-bar .region-label{
     font-family:'IBM Plex Mono', monospace; font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.1em;
   }
@@ -548,9 +555,12 @@ function renderFull(){
         </div>
         <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="${zoomImgStyle(state.zoom)}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
         ${current && current.label ? `<div class="map-caption">${current.label}</div>` : ""}
-        <div class="click-panel">
+<div class="click-panel">
           <span class="click-text">出現該地圖：<span class="click-count" id="clickCount">…</span> 次</span>
-          <button class="click-btn" id="clickPlusBtn">+1</button>
+          <div class="click-auth">
+            <input type="text" class="click-code" id="clickCode" placeholder="輸入暗號">
+            <button class="click-btn" id="clickPlusBtn" disabled>+1</button>
+          </div>
         </div>
       </div>
     ` : `<div class="empty">這個局部地圖目前沒有對應的完整地圖，請至 FullMaps 分頁新增（door_id 欄位需對應 "${state.buildingId}"）。</div>`}
@@ -570,10 +580,13 @@ enableMapDrag();
   setupClickCounter();
 }
 
+const CLICK_PASSCODE = "x";
+
 function setupClickCounter(){
   const btn = document.getElementById("clickPlusBtn");
   const countEl = document.getElementById("clickCount");
-  if(!btn || !countEl || !state.buildingId) return;
+  const codeInput = document.getElementById("clickCode");
+  if(!btn || !countEl || !codeInput || !state.buildingId) return;
 
   const refreshCount = async ()=>{
     try{
@@ -587,7 +600,14 @@ function setupClickCounter(){
   if(window.__mapClicksReady){ refreshCount(); }
   else{ window.addEventListener("mapClicksReady", refreshCount, {once:true}); }
 
+  const checkCode = ()=>{
+    btn.disabled = codeInput.value.trim() !== CLICK_PASSCODE;
+  };
+  codeInput.addEventListener("input", checkCode);
+  checkCode();
+
   btn.addEventListener("click", async ()=>{
+    if(codeInput.value.trim() !== CLICK_PASSCODE) return;
     btn.disabled = true;
     try{
       const newVal = await window.__mapClicks.increment(state.buildingId);
@@ -595,7 +615,8 @@ function setupClickCounter(){
     }catch(e){
       alert("紀錄失敗，請檢查網路連線");
     }
-    btn.disabled = false;
+    codeInput.value = "";
+    btn.disabled = true;
   });
 }
 
