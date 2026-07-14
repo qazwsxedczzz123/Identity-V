@@ -201,7 +201,21 @@ header.top{
     border:1px dashed var(--line-dim); padding:26px; border-radius:var(--radius);
   }
 
-  .floor-panel{background:var(--paper); border-radius:var(--radius); padding:18px; color:var(--ink);}
+  <div class="map-row">
+          <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="${zoomImgStyle(state.zoom)}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
+          ${floors.length > 1 ? `<button class="floor-next-btn" id="floorNextBtn" title="切換樓層">›</button>` : ""}
+        </div>
+  .map-row{display:flex; align-items:center; gap:12px;}
+  .map-row .map-frame{flex:1; margin:0;}
+  .floor-next-btn{
+    flex-shrink:0; width:40px; height:40px; border-radius:50%;
+    background:var(--paper-2); color:var(--ink); border:1px solid transparent;
+    display:flex; align-items:center; justify-content:center; cursor:pointer; font-size:18px;
+  }
+  .floor-next-btn:hover{background:var(--accent); color:#1B2838;}
+  @media (max-width: 640px){
+    .floor-next-btn{display:none;}
+  }
   .controls-row{display:flex; align-items:center; justify-content:space-between; gap:10px; flex-wrap:wrap; margin-bottom:16px;}
   .floor-tabs{display:flex; gap:8px; flex-wrap:wrap;}
   .zoom-controls{display:flex; align-items:center; gap:6px;}
@@ -573,13 +587,22 @@ function renderFull(){
       </div>
     ` : `<div class="empty">這個局部地圖目前沒有對應的完整地圖，請至 FullMaps 分頁新增（door_id 欄位需對應 "${state.buildingId}"）。</div>`}
   `;
-  viewEl.querySelectorAll(".floor-tab").forEach(el=>{
+viewEl.querySelectorAll(".floor-tab").forEach(el=>{
     el.addEventListener("click", ()=>{
       state.floor = el.dataset.floor;
       state.zoom = 1;
       renderFull();
     });
   });
+  const nextBtn = document.getElementById("floorNextBtn");
+  if(nextBtn){
+    nextBtn.addEventListener("click", ()=>{
+      const idx = floors.indexOf(state.floor);
+      state.floor = floors[(idx + 1) % floors.length];
+      state.zoom = 1;
+      renderFull();
+    });
+  }
 viewEl.querySelectorAll(".zoom-level").forEach(el=>{
     el.addEventListener("click", ()=> setZoom(+el.dataset.zoom));
   });
