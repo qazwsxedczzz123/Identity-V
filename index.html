@@ -200,11 +200,7 @@ header.top{
     font-family:'IBM Plex Mono', monospace; color:var(--muted); font-size:13px;
     border:1px dashed var(--line-dim); padding:26px; border-radius:var(--radius);
   }
-
-  <div class="map-row">
-          <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="${zoomImgStyle(state.zoom)}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
-          ${floors.length > 1 ? `<button class="floor-next-btn" id="floorNextBtn" title="切換樓層">›</button>` : ""}
-        </div>
+  
   .map-row{display:flex; align-items:center; gap:12px;}
   .map-row .map-frame{flex:1; margin:0;}
   .floor-next-btn{
@@ -574,7 +570,10 @@ function renderFull(){
             ${ZOOM_LEVELS.map(z=>`<button class="zoom-btn zoom-level ${state.zoom===z ? 'active' : ''}" data-zoom="${z}">${Math.round(z*100)}%</button>`).join("")}
           </div>
         </div>
-        <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="${zoomImgStyle(state.zoom)}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
+<div class="map-row">
+          <div class="map-frame">${current ? `<img src="${current.image_url}" alt="${current.label||current.floor}" style="${zoomImgStyle(state.zoom)}">` : `<div class="empty">此樓層尚無地圖</div>`}</div>
+          ${floors.length > 1 ? `<button class="floor-next-btn" id="floorNextBtn" title="切換樓層">›</button>` : ""}
+        </div>
         ${current && current.label ? `<div class="map-caption">${current.label}</div>` : ""}
 <div class="click-panel">
           <span class="click-text">出現該地圖：<span class="click-count" id="clickCount">…</span> 次</span>
